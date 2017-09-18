@@ -1,4 +1,4 @@
-import pygame
+import pygame,sys
 import random
 
 WINDOW_WIDTH = 400
@@ -14,6 +14,8 @@ WALL_COLOR = (167, 241, 232)
 BALL_COLOR = (196, 211, 208)
 
 pygame.init()
+pygame.font.init()
+myfont = pygame.font.SysFont('monospace', 26)
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption(TITLE)
 clock = pygame.time.Clock()
@@ -23,7 +25,6 @@ OBSTACLE_GAP = 150
 
 background_image = pygame.image.load('images/background.png')
 background_image = pygame.transform.scale(background_image, (WINDOW_WIDTH, WINDOW_HEIGHT))
-
 
 class Obstacle:
     def __init__(self):
@@ -40,14 +41,13 @@ class Game:
         self.FPS = FPS
         self.speedX = 5
         self.speedY = 3
-        self.accelerationX = 0.01
-        self.accelerationY = 0.01
+        self.accelerationX = 0.3
+        self.accelerationY = 0.3
         # interval at which new obstacle is generated
         self.interval = 80
         self.count = self.interval
-
+        self.score = 0
         # to avoid multi clicks
-        self.buffer = 4
 
     # re-initializes the game
     def reset(self):
@@ -78,8 +78,6 @@ class Game:
 
     # call this function each step to view the game
     def render(self):
-        self.speedX+=self.accelerationX
-        self.speedY+=self.accelerationY
         pygame.display.flip()
         # screen.fill(BLACK)
 
@@ -89,6 +87,9 @@ class Game:
         screen.blit(background_image, (0, 0))
         self._drawBall(BALL_COLOR)
         self._drawObstacles(WALL_COLOR)
+        textsurface = myfont.render("Score: "+str(self.score), False, (0, 0, 0))
+        screen.blit(textsurface,(260,0))
+
 
     # updates pos of ball and obstacles
     def _updatePos(self):
@@ -100,24 +101,6 @@ class Game:
 
         for i in self.obstacles:
             i.posY += self.speedY
-
-    # if action == 1, changes direction
-    # if action == 0, continue to move in the same direction
-    def _move(self, action):
-
-        # if action:
-        # 	self.direction = not self.direction
-    
-        # for manual input, press key SPACE
-        key = pygame.key.get_pressed()
-        if self.buffer == 4:
-            if key[pygame.K_SPACE]:
-                self.direction = not self.direction
-            self.buffer = 0
-        else:
-            self.buffer += 1
-
-        self._updatePos()
 
     # detects collision with boundries and obstacles
     # to be implemented
@@ -138,18 +121,22 @@ class Game:
 
         if self.obstacles[0].posY >= WINDOW_HEIGHT:
             self.obstacles.pop(0)
+            self.speedX+=self.accelerationX
+            self.speedY+=self.accelerationY
+            self.score+=1
 
     # performs a step based on the given action
-    def step(self, action):
+    def step(self):
 
         for event in pygame.event.get(): 
             if event.type == pygame.QUIT:
                 self.close()
-
+            if event.type == pygame.KEYDOWN:
+                key = pygame.key.get_pressed()
+                if key[pygame.K_SPACE]:
+                    self.direction = not self.direction
+        self._updatePos()
         self._manageObstacles()
-
-        self._move(action)
-
         if self._detectCollisions():
             self.done = True
             self.close()
@@ -167,5 +154,5 @@ env = Game(60)
 env.reset()
 
 while(True):
-    env.step(0)
+    env.step()
     env.render()
