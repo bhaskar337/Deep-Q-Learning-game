@@ -44,16 +44,19 @@ class Game:
         self.WALL_COLOR = (167, 241, 232)
         self.speedX = 5
         self.speedY = 3
-        self.accelerationX = 0.1
+        self.accelerationX = 0.04
         self.accelerationY = 0.2
         self.small = None
+        self.terminalVelociy = 7
         # interval at which new obstacle is generated
         self.interval = 80
+        self.intervalFloat = 80
         self.count = self.interval
         self.score = 0
         self.collisionson = True
         self.collisionstime = None
-        # to avoid multi clicks
+
+        self.isPowerUp = False
 
     # re-initializes the game
     def reset(self):
@@ -77,9 +80,15 @@ class Game:
     def _drawObstacles(self):
         for i in self.obstacles:
             rect = pygame.Rect(0, i.posY, i.gapX, OBSTACLE_WIDTH)
-            pygame.draw.rect(screen, i.color, rect)
+            if self.collisionstime != None and time.time() - self.collisionstime < TIME_INTERVAL:
+                pygame.draw.rect(screen, i.color, rect, 4)
+            else:
+                pygame.draw.rect(screen, i.color, rect)
             rect = pygame.Rect(i.gapX + i.OBSTACLE_GAP, i.posY, WINDOW_WIDTH, OBSTACLE_WIDTH)
-            pygame.draw.rect(screen, i.color, rect)
+            if self.collisionstime != None and time.time() - self.collisionstime < TIME_INTERVAL:
+                pygame.draw.rect(screen, i.color , rect,4)
+            else:
+                pygame.draw.rect(screen, i.color, rect)                
 
     # call this function each step to view the game
     def render(self):
@@ -102,13 +111,13 @@ class Game:
         screen.blit(textsurface,(260,0))
         if not self.collisionson:
             textsurface = myfont.render("Invulnerable: "+str(round(TIME_INTERVAL - (time.time() - self.collisionstime),2)), False, (0, 0, 0))
-            screen.blit(textsurface,(30,40))
+            screen.blit(textsurface,(120,40))
         if self.BALL_SIZE == 8:
             textsurface = myfont.render("Small Size: "+str(round(TIME_INTERVAL - (time.time() - self.small),2)), False, (0, 0, 0))
             if not self.collisionson:
-                screen.blit(textsurface,(30,40))
+                screen.blit(textsurface,(120,20))
             else:
-                screen.blit(textsurface,(30,80))
+                screen.blit(textsurface,(120,40))
 
     # updates pos of ball and obstacles
     def _updatePos(self):
@@ -132,7 +141,7 @@ class Game:
             return True
     # adds and removes obstacles
     def _manageObstacles(self):
-        if self.count == self.interval:
+        if self.count >= self.interval:
             prob = random.uniform(0,1)
             if prob > 0.2:
                 self.obstacles.append(Obstacle(self.WALL_COLOR))
@@ -146,17 +155,25 @@ class Game:
 
         if self.obstacles[0].posY >= WINDOW_HEIGHT:
             obs = self.obstacles.pop(0)
-            self.speedY+=self.accelerationY
-            self.score+=1
-            if(obs.color == POWERUPOBS_COLOR):
+            if self.speedY <= self.terminalVelociy:
+                self.speedY+=self.accelerationY
+                self.interval=round((self.speedY*self.interval)/(self.speedY + self.accelerationY))
+            self.isPowerUp = False
+
+        if self.obstacles[0].posY >= self.posY and not self.isPowerUp:
+            if (self.obstacles[0].color == POWERUPOBS_COLOR):
                 self.BALL_SIZE = 8
                 self.small = time.time()
-            elif(obs.color == POWERUPOBS_COLOR2):
+            elif (self.obstacles[0].color == POWERUPOBS_COLOR2):
                 self.collisionson = False
                 self.collisionstime = time.time()
                 self.WALL_COLOR = WHITE
                 for i in self.obstacles:
                     i.color = WHITE
+
+            self.score+=1            
+            self.isPowerUp = True
+
 
     # performs a step based on the given action
     def step(self):
