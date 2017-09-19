@@ -1,17 +1,18 @@
 import pygame,sys
 import random
-
+import time
 WINDOW_WIDTH = 400
 WINDOW_HEIGHT = 600
 
-BALL_SIZE = 15
+
 TITLE = 'GAME'
 
 # colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-WALL_COLOR = (167, 241, 232)
 BALL_COLOR = (196, 211, 208)
+POWERUPOBS_COLOR = (0, 200, 0)
+POWERUPOBS_COLOR2 = (200, 0, 0)
 
 pygame.init()
 pygame.font.init()
@@ -21,32 +22,37 @@ pygame.display.set_caption(TITLE)
 clock = pygame.time.Clock()
 
 OBSTACLE_WIDTH = 75
-
+TIME_INTERVAL = 5
 background_image = pygame.image.load('images/background.png')
 background_image = pygame.transform.scale(background_image, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
 class Obstacle:
-    def __init__(self):
+    def __init__(self,color):
         # start Y position of obstacle
-        self.OBSTACLE_GAP = random.randint(100, WINDOW_WIDTH - 100)
+        self.OBSTACLE_GAP = random.choice([150, 200, 250])
         self.posY = -OBSTACLE_WIDTH
-
+        self.color = color
         # End X position of obstacle part 1
-        self.gapX = random.randint(0, WINDOW_WIDTH - self.OBSTACLE_GAP)
+        self.gapX = random.choice([0, 50, 100, 150, 200, 250])
 
 
 # PRESS SPACE TO CHANGE DIRECTION
 class Game:
     def __init__(self, FPS=None):
         self.FPS = FPS
+        self.BALL_SIZE = 15
+        self.WALL_COLOR = (167, 241, 232)
         self.speedX = 5
         self.speedY = 3
         self.accelerationX = 0.1
         self.accelerationY = 0.2
+        self.small = None
         # interval at which new obstacle is generated
         self.interval = 80
         self.count = self.interval
         self.score = 0
+        self.collisionson = True
+        self.collisionstime = None
         # to avoid multi clicks
 
     # re-initializes the game
@@ -64,32 +70,45 @@ class Game:
 
     # draws the player's ball
     def _drawBall(self, color=WHITE):
-        pygame.draw.circle(screen, color, (int(self.posX), int(self.posY)), BALL_SIZE)
+        pygame.draw.circle(screen, color, (int(self.posX), int(self.posY)), self.BALL_SIZE)
         # screen.blit(ball_image, (self.posX, self.posY))
 
     # draws all the obstacles
-    def _drawObstacles(self, color=WHITE):
+    def _drawObstacles(self):
         for i in self.obstacles:
             rect = pygame.Rect(0, i.posY, i.gapX, OBSTACLE_WIDTH)
-            pygame.draw.rect(screen, color, rect)
-
+            pygame.draw.rect(screen, i.color, rect)
             rect = pygame.Rect(i.gapX + i.OBSTACLE_GAP, i.posY, WINDOW_WIDTH, OBSTACLE_WIDTH)
-            pygame.draw.rect(screen, color, rect)
+            pygame.draw.rect(screen, i.color, rect)
 
     # call this function each step to view the game
     def render(self):
         pygame.display.flip()
         # screen.fill(BLACK)
-
+        
         if self.FPS:
             clock.tick(self.FPS)
-
+        if self.small != None and time.time() - self.small >= TIME_INTERVAL:
+            self.BALL_SIZE = 15
+        if not self.collisionson and time.time() - self.collisionstime >= TIME_INTERVAL:
+            self.collisionson = True
+            self.WALL_COLOR = (167, 241, 232)
+            for i in self.obstacles:
+                    i.color = self.WALL_COLOR
         screen.blit(background_image, (0, 0))
         self._drawBall(BALL_COLOR)
-        self._drawObstacles(WALL_COLOR)
+        self._drawObstacles()
         textsurface = myfont.render("Score: "+str(self.score), False, (0, 0, 0))
         screen.blit(textsurface,(260,0))
-
+        if not self.collisionson:
+            textsurface = myfont.render("Invulnerable: "+str(round(TIME_INTERVAL - (time.time() - self.collisionstime),2)), False, (0, 0, 0))
+            screen.blit(textsurface,(30,40))
+        if self.BALL_SIZE == 8:
+            textsurface = myfont.render("Small Size: "+str(round(TIME_INTERVAL - (time.time() - self.small),2)), False, (0, 0, 0))
+            if not self.collisionson:
+                screen.blit(textsurface,(30,40))
+            else:
+                screen.blit(textsurface,(30,80))
 
     # updates pos of ball and obstacles
     def _updatePos(self):
@@ -114,15 +133,30 @@ class Game:
     # adds and removes obstacles
     def _manageObstacles(self):
         if self.count == self.interval:
-            self.obstacles.append(Obstacle())
+            prob = random.uniform(0,1)
+            if prob > 0.2:
+                self.obstacles.append(Obstacle(self.WALL_COLOR))
+            elif prob <=0.2 and prob > 0.1:
+                self.obstacles.append(Obstacle(POWERUPOBS_COLOR2))
+            else:
+                self.obstacles.append(Obstacle(POWERUPOBS_COLOR))
             self.count = 0
         else:
             self.count += 1
 
         if self.obstacles[0].posY >= WINDOW_HEIGHT:
-            self.obstacles.pop(0)
+            obs = self.obstacles.pop(0)
             self.speedY+=self.accelerationY
             self.score+=1
+            if(obs.color == POWERUPOBS_COLOR):
+                self.BALL_SIZE = 8
+                self.small = time.time()
+            elif(obs.color == POWERUPOBS_COLOR2):
+                self.collisionson = False
+                self.collisionstime = time.time()
+                self.WALL_COLOR = WHITE
+                for i in self.obstacles:
+                    i.color = WHITE
 
     # performs a step based on the given action
     def step(self):
@@ -137,7 +171,7 @@ class Game:
                     self.speedX+=self.accelerationX
         self._updatePos()
         self._manageObstacles()
-        if self._detectCollisions():
+        if self.collisionson and self._detectCollisions():
             self.done = True
             self.close()
         if self._boundaryHit():

@@ -4,36 +4,38 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
-BALL_COLOR	game.py	/^BALL_COLOR = (196, 211, 208)$/;"	kind:variable	line:14
-BALL_SIZE	game.py	/^BALL_SIZE = 15$/;"	kind:variable	line:7
+BALL_COLOR	game.py	/^BALL_COLOR = (196, 211, 208)$/;"	kind:variable	line:13
 BLACK	game.py	/^BLACK = (0, 0, 0)$/;"	kind:variable	line:11
-Game	game.py	/^class Game:$/;"	kind:class	line:38
-OBSTACLE_GAP	game.py	/^OBSTACLE_GAP = 150$/;"	kind:variable	line:22
-OBSTACLE_WIDTH	game.py	/^OBSTACLE_WIDTH = 75$/;"	kind:variable	line:21
-Obstacle	game.py	/^class Obstacle:$/;"	kind:class	line:28
+Game	game.py	/^class Game:$/;"	kind:class	line:40
+OBSTACLE_WIDTH	game.py	/^OBSTACLE_WIDTH = 75$/;"	kind:variable	line:24
+Obstacle	game.py	/^class Obstacle:$/;"	kind:class	line:29
+POWERUPOBS_COLOR	game.py	/^POWERUPOBS_COLOR = (0, 200, 0)$/;"	kind:variable	line:14
+POWERUPOBS_COLOR2	game.py	/^POWERUPOBS_COLOR2 = (200, 0, 0)$/;"	kind:variable	line:15
+TIME_INTERVAL	game.py	/^TIME_INTERVAL = 5$/;"	kind:variable	line:25
 TITLE	game.py	/^TITLE = 'GAME'$/;"	kind:variable	line:8
-WALL_COLOR	game.py	/^WALL_COLOR = (167, 241, 232)$/;"	kind:variable	line:13
 WHITE	game.py	/^WHITE = (255, 255, 255)$/;"	kind:variable	line:12
 WINDOW_HEIGHT	game.py	/^WINDOW_HEIGHT = 600$/;"	kind:variable	line:5
 WINDOW_WIDTH	game.py	/^WINDOW_WIDTH = 400$/;"	kind:variable	line:4
-__init__	game.py	/^    def __init__(self):$/;"	kind:member	line:29
-__init__	game.py	/^    def __init__(self, FPS=None):$/;"	kind:member	line:39
-_boundaryHit	game.py	/^    def _boundaryHit(self):$/;"	kind:member	line:128
-_detectCollisions	game.py	/^    def _detectCollisions(self):$/;"	kind:member	line:124
-_drawBall	game.py	/^    def _drawBall(self, color=WHITE):$/;"	kind:member	line:66
-_drawObstacles	game.py	/^    def _drawObstacles(self, color=WHITE):$/;"	kind:member	line:71
-_manageObstacles	game.py	/^    def _manageObstacles(self):$/;"	kind:member	line:132
-_move	game.py	/^    def _move(self, action):$/;"	kind:member	line:106
-_updatePos	game.py	/^    def _updatePos(self):$/;"	kind:member	line:94
-background_image	game.py	/^background_image = pygame.image.load('images\/background.png')$/;"	kind:variable	line:24
-background_image	game.py	/^background_image = pygame.transform.scale(background_image, (WINDOW_WIDTH, WINDOW_HEIGHT))$/;"	kind:variable	line:25
-clock	game.py	/^clock = pygame.time.Clock()$/;"	kind:variable	line:19
-close	game.py	/^    def close(self):$/;"	kind:member	line:161
-env	game.py	/^env = Game(60)$/;"	kind:variable	line:166
+__init__	game.py	/^    def __init__(self, FPS=None):$/;"	kind:member	line:41
+__init__	game.py	/^    def __init__(self,color):$/;"	kind:member	line:30
+_boundaryHit	game.py	/^    def _boundaryHit(self):$/;"	kind:member	line:130
+_detectCollisions	game.py	/^    def _detectCollisions(self):$/;"	kind:member	line:126
+_drawBall	game.py	/^    def _drawBall(self, color=WHITE):$/;"	kind:member	line:72
+_drawObstacles	game.py	/^    def _drawObstacles(self):$/;"	kind:member	line:77
+_manageObstacles	game.py	/^    def _manageObstacles(self):$/;"	kind:member	line:134
+_updatePos	game.py	/^    def _updatePos(self):$/;"	kind:member	line:114
+background_image	game.py	/^background_image = pygame.image.load('images\/background.png')$/;"	kind:variable	line:26
+background_image	game.py	/^background_image = pygame.transform.scale(background_image, (WINDOW_WIDTH, WINDOW_HEIGHT))$/;"	kind:variable	line:27
+clock	game.py	/^clock = pygame.time.Clock()$/;"	kind:variable	line:22
+close	game.py	/^    def close(self):$/;"	kind:member	line:182
+env	game.py	/^env = Game(60)$/;"	kind:variable	line:187
 game.py	game.py	1;"	kind:file	line:1
-pygame	game.py	/^import pygame$/;"	kind:namespace	line:1
+myfont	game.py	/^myfont = pygame.font.SysFont('monospace', 26)$/;"	kind:variable	line:19
+pygame	game.py	/^import pygame,sys$/;"	kind:namespace	line:1
 random	game.py	/^import random$/;"	kind:namespace	line:2
-render	game.py	/^    def render(self):$/;"	kind:member	line:80
-reset	game.py	/^    def reset(self):$/;"	kind:member	line:53
-screen	game.py	/^screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))$/;"	kind:variable	line:17
-step	game.py	/^    def step(self, action):$/;"	kind:member	line:143
+render	game.py	/^    def render(self):$/;"	kind:member	line:85
+reset	game.py	/^    def reset(self):$/;"	kind:member	line:59
+screen	game.py	/^screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))$/;"	kind:variable	line:20
+step	game.py	/^    def step(self):$/;"	kind:member	line:162
+sys	game.py	/^import pygame,sys$/;"	kind:namespace	line:1
+time	game.py	/^import time$/;"	kind:namespace	line:3
