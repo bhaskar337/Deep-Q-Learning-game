@@ -167,9 +167,9 @@ class Game:
             elif (self.obstacles[0].color == POWERUPOBS_COLOR2):
                 self.collisionson = False
                 self.collisionstime = time.time()
-                self.WALL_COLOR = WHITE
+                self.WALL_COLOR = BLACK
                 for i in self.obstacles:
-                    i.color = WHITE
+                    i.color = BLACK
 
             self.score+=1            
             self.isPowerUp = True
