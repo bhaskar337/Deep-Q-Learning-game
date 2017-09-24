@@ -1,5 +1,7 @@
 import pygame
 import random
+import cv2
+
 
 WINDOW_WIDTH = 400
 WINDOW_HEIGHT = 600
@@ -15,8 +17,6 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
 pygame.init()
-pygame.font.init()
-myfont = pygame.font.SysFont('monospace', 26)
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption(TITLE)
 clock = pygame.time.Clock()
@@ -24,24 +24,26 @@ clock = pygame.time.Clock()
 
 class Obstacle:
     def __init__(self):
-        # start Y position of obstacle
+        #gap between the 2 corresponding obstacles
         self.obstacle_gap = random.choice([150, 200, 250])
+        # start Y position of obstacle
         self.posY =  -OBSTACLE_WIDTH
         # End X position of obstacle part 1
-        self.gapX = random.choice([0, 50, 100, 150])
+        self.gapX = random.choice([50, 100])
 
 
-# PRESS SPACE TO CHANGE DIRECTION
 class Game:
     def __init__(self, FPS=None):
         self.FPS = FPS
 
-        self.accelerationX = 0.05
-        self.accelerationY = 0.2
-        self.terminalVelociy = 7
+        #the speed of x is accelerates when direction is not changed
+        #and is reinitialized when direction is changed
+        self.accelerationX = 0.2
+        self.speedXInit = 3
 
+        self.speedY = 4
         # interval at which new obstacle is generated
-        self.interval = 90
+        self.interval = 70
 
 
     # re-initializes the game
@@ -54,14 +56,15 @@ class Game:
         self.posY = WINDOW_HEIGHT - 100
 
         # d irection: 0 = left and 1 = right
-        self.direction = 0
+        self.direction = random.choice([0,1])
         self.obstacles = []
 
-        self.speedX = 5
-        self.speedY = 3
-
+        self.speedX = self.speedXInit
         self.count = self.interval
         self.passObstacle = False
+
+        #pixel array of the game
+        self.state = pygame.surfarray.pixels3d(pygame.display.get_surface())
 
 
 
@@ -81,9 +84,8 @@ class Game:
                 pygame.draw.rect(screen, WHITE, rect)       
 
          
-
-    # call this function each step to view the game
-    def render(self):
+    #draws the game screen with given FPS
+    def _render(self):
         pygame.display.flip()
         screen.fill(BLACK)
         if self.FPS:
@@ -91,15 +93,14 @@ class Game:
 
         self._drawBall()
         self._drawObstacles()
-
-        textsurface = myfont.render("Score: " + str(self.score), False, WHITE)
-        screen.blit(textsurface,(240,0))
        
 
     # updates pos of ball and obstacles
     def _updatePos(self, action):
         if action:
             self.direction = not self.direction
+            self.speedX = self.speedXInit
+        else:
             self.speedX += self.accelerationX
 
         if self.direction:
@@ -121,6 +122,7 @@ class Game:
 
 
     # adds and removes obstacles
+    # returns True if 0th obstacle is passed
     def _manageObstacles(self):
         if self.count >= self.interval:
             self.obstacles.append(Obstacle())
@@ -130,32 +132,53 @@ class Game:
 
         if self.obstacles[0].posY >= WINDOW_HEIGHT:
             obs = self.obstacles.pop(0)
-            if self.speedY <= self.terminalVelociy:
-                self.speedY += self.accelerationY
-                self.interval = int((self.speedY*self.interval)/(self.speedY + self.accelerationY))
             self.passObstacle = False
 
         elif not self.passObstacle and (self.obstacles[0].posY + OBSTACLE_WIDTH/2) > self.posY:
             self.score += 1   
             self.passObstacle = True
-            return 1  
+            return True
 
-        return 0.1       
+        return False 
+
+
+    #returns reshaped 80 x 80 game state 
+    def _getState(self):
+        state = cv2.cvtColor(cv2.resize(self.state, (80, 80)), cv2.COLOR_BGR2GRAY)
+        _, state = cv2.threshold(state, 1, 255,cv2.THRESH_BINARY)
+        return state.T
 
 
     # performs a step based on the given action
     def step(self, action):
-        self._updatePos(action)
-        reward = self._manageObstacles()
-       
-        if self._detectCollisions():
-            reward = -1
-            self.done = True
 
-        state = pygame.surfarray.array2d(pygame.display.get_surface())
-        state[state > 0] = 255
 
-        return state, reward, self.done
+        #reward = 0.1 if alive
+        #reward = 1 if cross centre of 0th obstacle
+        #reward = -1 if collide with obstacle/boundry
+        reward = 0.1
+
+        #stacking up 4 game frames
+        actions = [action, 0, 0, 0]
+        state = []
+        for i in actions: 
+            for event in pygame.event.get(): 
+                if event.type == pygame.QUIT:
+                    self.close()
+
+            self._updatePos(i)
+
+            if self._manageObstacles():
+                reward = 1
+           
+            if self._detectCollisions():
+                reward = -1
+                self.done = True
+
+            state.append(self._getState())
+            self._render()
+
+        return state, reward, self.done, self.score
 
 
     # exits the game
@@ -163,26 +186,4 @@ class Game:
         pygame.quit()
         exit(0)
 
-
-env = Game(60)
-env.reset()
-done = False
-
-while True:
-
-    action = 0
-    for event in pygame.event.get(): 
-        if event.type == pygame.QUIT:
-            env.close()
-
-        if event.type == pygame.KEYDOWN:
-            key = pygame.key.get_pressed()
-            if key[pygame.K_SPACE]:
-                action = 1
-
-    state, reward, done = env.step(action)
-    env.render()
-
-    if done:
-        break
 
